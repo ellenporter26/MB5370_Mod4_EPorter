@@ -3,6 +3,7 @@
 library(readr)
 library(tidyverse)
 
+
 africa <- read.csv("C:/Users/ellen/OneDrive/Documents/JCU/2024/MB5370 Techniques 1/Module 4 - Data in R/Data for plot reco.csv")
 
 p <- ggplot(data=africa) +
