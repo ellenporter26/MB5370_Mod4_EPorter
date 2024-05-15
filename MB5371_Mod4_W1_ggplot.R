@@ -206,7 +206,8 @@ best_in_class <- mpg %>% #first, filter the data and add a label that calls in t
 
 ggplot(mpg, aes(displ, hwy)) +
   geom_point(aes(colour = class)) +
-  geom_text(aes(label = model), data = best_in_class)
+  geom_text(aes(label = model), data = best_in_class) +
+  
 
 # Use nudge() to avoid label overlap in the plot.
 
