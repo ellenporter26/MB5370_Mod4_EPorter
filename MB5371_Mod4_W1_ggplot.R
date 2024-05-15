@@ -185,3 +185,171 @@ ggplot(mpg, aes(displ, hwy)) +
     caption = "Data from fueleconomy.gov"
   )
 
+#Use labs() to replace axis labels and legend titles:
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class)) +
+  geom_smooth(se = FALSE) +
+  labs(
+    x = "Engine displacement (L)",
+    y = "Highway fuel economy (mpg)",
+    colour = "Car type"
+  ) 
+
+## Annotations
+
+# add text to the plot like textual labels:
+library(tidyr)
+library(dplyr)
+best_in_class <- mpg %>% #first, filter the data and add a label that calls in the values from the data frame
+  group_by(class) %>%
+  filter(row_number(desc(hwy)) == 1)
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class)) +
+  geom_text(aes(label = model), data = best_in_class)
+
+# Use nudge() to avoid label overlap in the plot.
+
+## Scales
+
+# see default scales by ggplot:
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class))
+
+# Tweak scales by offering a character vector indicating the start and end of your limit (i.e., limits are 0-12):
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class)) +
+  scale_x_continuous(limits = c(0,12)) +
+  scale_y_continuous(limits = c(0,12)) +
+  scale_colour_discrete()
+
+## Axis ticks
+
+#Change ticks on axis:
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  scale_y_continuous(breaks = seq(15, 40, by = 5))
+
+# Sequentially increases by 5 between 15 and 40.
+seq(15, 40, by = 5)
+
+# Use labels set to NULL to suppress the labels altogether:
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  scale_x_continuous(labels = NULL) +
+  scale_y_continuous(labels = NULL)
+
+## Legends and colour schemes:
+
+# Change the position of a legend:
+base <- ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class))
+
+base + theme(legend.position = "left")
+base + theme(legend.position = "top")
+base + theme(legend.position = "bottom")
+base + theme(legend.position = "right") # the default
+base + theme(legend.position = "none") # suppresses the legend altogether
+
+# Replacing a scale
+
+# Switch out scale to a log10 one & turn points into bins:
+ggplot(diamonds, aes(carat, price)) +
+  geom_bin2d() + 
+  scale_x_log10() + 
+  scale_y_log10()
+
+# Apply colour scale:
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv))
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv)) +
+  scale_colour_brewer(palette = "Set1")
+
+# Add redundant shape mapping (great to interpret black/white graphs):
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv, shape = drv)) +
+  scale_colour_brewer(palette = "Set1")
+
+# Use predefined colours that I've set myself:
+presidential %>%
+  mutate(id = 33 + row_number()) %>%
+  ggplot(aes(start, id, colour = party)) +
+  geom_point() +
+  geom_segment(aes(xend = end, yend = id)) +
+  scale_colour_manual(values = c(Republican = "red", Democratic = "blue"))
+
+# Use the 'viridis' colour scheme:
+#install.packages('viridis')
+#install.packages('hexbin')
+library(viridis)
+library(hexbin)
+df <- tibble( # make a fake dataset to plot it
+  x = rnorm(10000),
+  y = rnorm(10000)
+)
+ggplot(df, aes(x, y)) +
+  geom_hex() + # a new geom
+  coord_fixed()
+
+ggplot(df, aes(x, y)) +
+  geom_hex() +
+  viridis::scale_fill_viridis() +
+  coord_fixed()
+
+## Themes
+
+# Let's explore some built-in functions:
+
+# Bw
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_bw()
+
+# Light
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_light()
+
+# Classic
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_classic()
+
+# Dark
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  theme_dark()
+
+# Set your own theme:
+theme (panel.border = element_blank(),
+       panel.grid.minor.x = element_blank(),
+       panel.grid.minor.y = element_blank(),
+       legend.position="bottom",
+       legend.title=element_blank(),
+       legend.text=element_text(size=8),
+       panel.grid.major = element_blank(),
+       legend.key = element_blank(),
+       legend.background = element_blank(),
+       axis.text.y=element_text(colour="black"),
+       axis.text.x=element_text(colour="black"),
+       text=element_text(family="Arial")) 
+
+## Saving and exporting plots
+
+# Use ggsave() to save the most recent plot:
+ggplot(mpg, aes(displ, hwy)) + geom_point()
+
+ggsave("my-plot.pdf")
+#> Saving 7 x 4.32 in image
+
+# Play with width and height arguments:
+ggsave("my-plot.pdf", width = 12, height = 24)
+
+  
+  
