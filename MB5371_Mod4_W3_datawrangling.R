@@ -147,7 +147,7 @@ treatment <- tribble(
 )
 
 # Fill in missing values with tidyr:fill():
-treatment |>
+filltreat <-treatment |>
   fill(everything())
 
 # Fixed values
@@ -191,3 +191,7 @@ read_csv("a,b\n1,2\na,b")
 read_csv("a;b\n1;3")
 
 
+# exercise to bind dataframes
+one <- starwars[1:4, ]
+two <- starwars[9:12, ]
+bind_rows(one, two)

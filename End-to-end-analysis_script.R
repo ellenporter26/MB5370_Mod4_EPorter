@@ -127,26 +127,62 @@ net <- net %>% relocate(Year)
 # add column called fishing method to put combined in it
 other <-
   fish |>
-  select(starts_with("Net")) |>
-  add_column("Fishing_method" = "net")
+  select(starts_with("Other")) |>
+  add_column("Fishing_method" = "other")
 
-net #check
+other #check
 
 # rename variable names:
-names(net)[1] <- "Licences"
-names(net)[2] <- "Days"
-names(net)[3] <- "Tonnes"
-names(net)[4] <- "DiscardNo"
+names(other)[1] <- "Licences"
+names(other)[2] <- "Days"
+names(other)[3] <- "Tonnes"
+names(other)[4] <- "DiscardNo"
 
 
 # Remove first row that contained old headings:
-net <- net[-c(1), ]
+other <- other[-c(1), ]
 
 # Add Column with years 1992-2023:
-net$new_var <- c(1992:2023)
+other$new_var <- c(1992:2023)
 # change name to Years
-names(net) [6] <- "Year"
+names(other) [6] <- "Year"
 
 # Move 'year' column to start:
-net <- net %>% relocate(Year)
+other <- other %>% relocate(Year)
 
+
+
+
+# ---- POT DATAFRAME
+# add column called fishing method to put combined in it
+pot <-
+  fish |>
+  select(starts_with("Pot")) |>
+  add_column("Fishing_method" = "pot")
+
+pot #check
+
+# rename variable names:
+names(pot)[1] <- "Licences"
+names(pot)[2] <- "Days"
+names(pot)[3] <- "Tonnes"
+names(pot)[4] <- "DiscardNo"
+
+
+# Remove first row that contained old headings:
+pot <- pot[-c(1), ]
+
+# Add Column with years 1992-2023:
+pot$new_var <- c(1992:2023)
+# change name to Years
+names(pot) [6] <- "Year"
+
+# Move 'year' column to start:
+pot <- pot %>% relocate(Year)
+
+# --- BIND ALL DATASETS
+all <- bind_rows(combined, diving, line, net, pot, other)
+
+
+
+# --- REMOVE BLANK CELLS & NAS
