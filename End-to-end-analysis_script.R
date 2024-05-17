@@ -1,7 +1,9 @@
 # --- End-to-end analysis
 
 # Import Qfish data:
-fish <- read.csv("C:/Users/ellen/OneDrive/Documents/JCU/2024/MB5370 Techniques 1/Module 4 - Data in R/charterfishery_catcheffort.csv")
+getwd()
+fish <- read.csv("data/charterfishery_catcheffort.csv") |>
+  rename(Year = X)
 
 # check data:
 str(fish) # data is set up messily, need to fix
@@ -13,8 +15,13 @@ library(tidyverse) # install to access functions
 # add column called fishing method to put combined in it
 combined <-
   fish |>
-    select(starts_with("Comb")) |>
-    add_column("Fishing_method" = "combined")
+    select(Year, starts_with("Comb")) |> #
+    add_column("Fishing_method" = "combined") |>
+  rename(Licences = Combination,
+         Days = Combination.1,
+         Tonnes = Combination.2,
+         DiscardNumber = Combination.3) |>
+    slice(-1)
 
 combined #check
 
@@ -180,9 +187,48 @@ names(pot) [6] <- "Year"
 # Move 'year' column to start:
 pot <- pot %>% relocate(Year)
 
-# --- BIND ALL DATASETS
-all <- bind_rows(combined, diving, line, net, pot, other)
+# --- BIND ALL DATASETS - except for net, pot and other as they have NAs only or metrics that I am not measuring (i.e., in other).
+all <- bind_rows(combined, diving, line) |>
+  as.tibble()
 
 
 
 # --- REMOVE BLANK CELLS & NAS
+
+all |> 
+  mutate(across(!c(Year, Fishing_method), as.factor))
+      
+all |> 
+  mutate_at(vars(!c(Year, Fishing_method), str_replace(.,"")))
+                
+                
+#str_replace(pattern="N/A", replacement="")))
+  
+  
+
+
+# Replace all "N/A" cells with 0
+all[all == "N/A"] <- "NA"
+# Replace all blank cells with 0
+all[all== ""] <- 0
+
+# remove NAs
+all2 <-  na.omit(all)
+str_re
+
+str(all) # check data type. Most are in character. Need to change.
+DiscardNo
+DiscardNo <- as.numeric(all$DiscardNo)
+
+ggplot(data=all) +
+  geom_point(mapping = aes(x=Year, y=DiscardNo))
+
+ggplot(data= subset(all, !is.na(DiscardNo)), aes(x = Year, y = DiscardNo)) +
+  geom_smooth()
+
+#EXAMPLE BELOW:
+library(ggplot2)
+data("iris")
+iris$Sepal.Length[5:10] <- NA  # Create some NAs for this example
+ggplot(data = subset(iris, !is.na(Sepal.Length)), aes(x = Sepal.Length)) +
+  geom_bar(stat = "bin")

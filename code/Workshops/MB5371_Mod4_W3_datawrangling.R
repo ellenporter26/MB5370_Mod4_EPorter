@@ -155,6 +155,7 @@ filltreat <-treatment |>
 x <- c(1, 4, 5, 7, NA)
 coalesce(x, 0)
 
+
 # Replace a concrete value with NA if it is in fact meant to represent a missing value:
 x <- c(1, 4, 5, 7, -99)
 na_if(x, -99)
