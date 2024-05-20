@@ -1,18 +1,16 @@
 # --- End-to-end analysis
 
 # Import Qfish data:
-getwd()
-fish <- read.csv("data/charterfishery_catcheffort.csv") |>
+fish <- read.csv("data/charterfishery_catcheffort.csv")|>
   rename(Year = X)
-
+fish
 # check data:
 str(fish) # data is set up messily, need to fix
 
 library(tidyverse) # install to access functions
+library(dplyr)
 
 # ---- COMBINED DATAFRAME
-
-# add column called fishing method to put combined in it
 combined <-
   fish |>
     select(Year, starts_with("Comb")) |> #
@@ -25,167 +23,34 @@ combined <-
 
 combined #check
 
-# rename variable names:
-names(combined)[1] <- "Licences"
-names(combined)[2] <- "Days"
-names(combined)[3] <- "Tonnes"
-names(combined)[4] <- "DiscardNo"
-
-
-# Remove first row that contained old headings:
-combined <- combined[-c(1), ]
-
-# Add Column with years 1992-2023:
-combined$new_var <- c(1992:2023)
-# change name to Years
-names(combined) [6] <- "Year"
-
-# Move 'year' column to start:
-combined <- combined %>% relocate(Year)
 
 # ---- DIVING DATAFRAME
-# add column called fishing method to put combined in it
 diving <-
   fish |>
-  select(starts_with("Div")) |>
-  add_column("Fishing_method" = "diving")
-
-diving #check
-
-# rename variable names:
-names(diving)[1] <- "Licences"
-names(diving)[2] <- "Days"
-names(diving)[3] <- "Tonnes"
-names(diving)[4] <- "DiscardNo"
-
-
-# Remove first row that contained old headings:
-diving <- diving[-c(1), ]
-
-# Add Column with years 1992-2023:
-diving$new_var <- c(1992:2023)
-# change name to Years
-names(diving) [6] <- "Year"
-
-# Move 'year' column to start:
-diving <- diving %>% relocate(Year)
-
+  select(Year, starts_with("Div")) |> #
+  add_column("Fishing_method" = "diving") |>
+  rename(Licences = Diving,
+         Days = Diving.1,
+         Tonnes = Diving.2,
+         DiscardNumber = Diving.3) |>
+  slice(-1)
+diving
 
 
 # ---- LINE DATAFRAME
-# add column called fishing method to put combined in it
 line <-
   fish |>
-  select(starts_with("Lin")) |>
-  add_column("Fishing_method" = "line")
+  select(Year, starts_with("Lin")) |> #
+  add_column("Fishing_method" = "line") |>
+  rename(Licences = Line,
+         Days = Line.1,
+         Tonnes = Line.2,
+         DiscardNumber = Line.3) |>
+  slice(-1)
+line
 
-line #check
+# Hardly any data on net, pot and other if not any, so not using that in analysis.
 
-# rename variable names:
-names(line)[1] <- "Licences"
-names(line)[2] <- "Days"
-names(line)[3] <- "Tonnes"
-names(line)[4] <- "DiscardNo"
-
-
-# Remove first row that contained old headings:
-line <- line[-c(1), ]
-
-# Add Column with years 1992-2023:
-line$new_var <- c(1992:2023)
-# change name to Years
-names(line) [6] <- "Year"
-
-# Move 'year' column to start:
-line <- line %>% relocate(Year)
-
-
-
-# ---- NET DATAFRAME
-# add column called fishing method to put combined in it
-net <-
-  fish |>
-  select(starts_with("Net")) |>
-  add_column("Fishing_method" = "net")
-
-net #check
-
-# rename variable names:
-names(net)[1] <- "Licences"
-names(net)[2] <- "Days"
-names(net)[3] <- "Tonnes"
-names(net)[4] <- "DiscardNo"
-
-
-# Remove first row that contained old headings:
-net <- net[-c(1), ]
-
-# Add Column with years 1992-2023:
-net$new_var <- c(1992:2023)
-# change name to Years
-names(net) [6] <- "Year"
-
-# Move 'year' column to start:
-net <- net %>% relocate(Year)
-
-
-
-# ---- OTHER DATAFRAME
-# add column called fishing method to put combined in it
-other <-
-  fish |>
-  select(starts_with("Other")) |>
-  add_column("Fishing_method" = "other")
-
-other #check
-
-# rename variable names:
-names(other)[1] <- "Licences"
-names(other)[2] <- "Days"
-names(other)[3] <- "Tonnes"
-names(other)[4] <- "DiscardNo"
-
-
-# Remove first row that contained old headings:
-other <- other[-c(1), ]
-
-# Add Column with years 1992-2023:
-other$new_var <- c(1992:2023)
-# change name to Years
-names(other) [6] <- "Year"
-
-# Move 'year' column to start:
-other <- other %>% relocate(Year)
-
-
-
-
-# ---- POT DATAFRAME
-# add column called fishing method to put combined in it
-pot <-
-  fish |>
-  select(starts_with("Pot")) |>
-  add_column("Fishing_method" = "pot")
-
-pot #check
-
-# rename variable names:
-names(pot)[1] <- "Licences"
-names(pot)[2] <- "Days"
-names(pot)[3] <- "Tonnes"
-names(pot)[4] <- "DiscardNo"
-
-
-# Remove first row that contained old headings:
-pot <- pot[-c(1), ]
-
-# Add Column with years 1992-2023:
-pot$new_var <- c(1992:2023)
-# change name to Years
-names(pot) [6] <- "Year"
-
-# Move 'year' column to start:
-pot <- pot %>% relocate(Year)
 
 # --- BIND ALL DATASETS - except for net, pot and other as they have NAs only or metrics that I am not measuring (i.e., in other).
 all <- bind_rows(combined, diving, line) |>
@@ -195,25 +60,20 @@ all <- bind_rows(combined, diving, line) |>
 
 # --- REMOVE BLANK CELLS & NAS
 
-all |> 
-  mutate(across(!c(Year, Fishing_method), as.factor))
-      
-all |> 
-  mutate_at(vars(!c(Year, Fishing_method), str_replace(.,"")))
-                
-                
-#str_replace(pattern="N/A", replacement="")))
-  
-  
+# Replace all N/As as a blank:
+all <- data.frame(lapply(all, function(x) {
+  str_replace_all(x, "N/A", "")
+}))
 
 
-# Replace all "N/A" cells with 0
-all[all == "N/A"] <- "NA"
-# Replace all blank cells with 0
-all[all== ""] <- 0
+# Change Licences, Days, Tonnes and Discard No to numeric data types:
+all <- 
+  all |> 
+  mutate(across(!c(Year, Fishing_method), as.numeric))
 
-# remove NAs
-all2 <-  na.omit(all)
+
+# Remove all NAs:
+all <-  na.omit(all)
 str_re
 
 str(all) # check data type. Most are in character. Need to change.
