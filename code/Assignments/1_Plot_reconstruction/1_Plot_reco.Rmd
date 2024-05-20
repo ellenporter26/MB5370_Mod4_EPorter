@@ -1,0 +1,32 @@
+---
+title: ''
+author: ""
+date: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load relevant libraries:
+library(knitr)
+library(readr)
+library(tidyverse)
+
+# Use read.csv function to import CSV file containing data points:
+africa <- read.csv("C:/GitHub_EPorter/MB5370_Mod4_EPorter/data/plotreco_data.csv")
+
+# Create ggplot:
+p <- ggplot(data=africa) +
+  geom_point(mapping = aes(x=Year, y=GDP_GR)) + #Apply points where Year is on x-axis & GDP is on y-axis.
+  geom_line(mapping = aes(x=Year, y=GDP_GR)) + #Apply lines to connect points.
+  facet_wrap(~Country, nrow=3) + #Faceting by 'country' because otherwise, it's too messy
+  theme_light() + #Apply light theme to keep grids and white text in strips.
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) + #Turn 'Year' 90 degrees to face sideways. Frees up space.
+  xlab("Year") + #Apply 'x' label
+  ylab("GDP Growth Rate (%)") #Apply 'y' label
+p + theme(strip.background = element_rect(fill = "black")) #Change colour of strip to black as it looks smarter.
+```
+

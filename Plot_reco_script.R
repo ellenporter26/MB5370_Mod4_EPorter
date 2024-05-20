@@ -17,5 +17,5 @@ p <- ggplot(data=africa) +
 p
 p + theme(strip.background = element_rect(fill = "black"))
 
-
+ggsave("Plot_reco_final.png", width = 5, height = 4, dpi=300, units = "in")
 

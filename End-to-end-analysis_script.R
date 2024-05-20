@@ -56,7 +56,9 @@ line
 all <- bind_rows(combined, diving, line) |>
   as.tibble()
 
-
+# Also create dataframe without line on top of that too - too many high variables:
+all2 <- bind_rows(combined, diving) |>
+  as.tibble()
 
 # --- REMOVE BLANK CELLS & NAS
 
@@ -65,30 +67,46 @@ all <- data.frame(lapply(all, function(x) {
   str_replace_all(x, "N/A", "")
 }))
 
+all2 <- data.frame(lapply(all2, function(x) {
+  str_replace_all(x, "N/A", "")
+}))
 
 # Change Licences, Days, Tonnes and Discard No to numeric data types:
 all <- 
   all |> 
   mutate(across(!c(Year, Fishing_method), as.numeric))
 
+all2 <- 
+  all2 |> 
+  mutate(across(!c(Year, Fishing_method), as.numeric))
+
 
 # Remove all NAs:
 all <-  na.omit(all)
-str_re
+all2 <-  na.omit(all2)
 
-str(all) # check data type. Most are in character. Need to change.
-DiscardNo
-DiscardNo <- as.numeric(all$DiscardNo)
 
-ggplot(data=all) +
-  geom_point(mapping = aes(x=Year, y=DiscardNo))
+### CREATE GGPLOT:
 
-ggplot(data= subset(all, !is.na(DiscardNo)), aes(x = Year, y = DiscardNo)) +
-  geom_smooth()
+# Tonnage per year
+plot1 <- ggplot(data=all2, mapping = aes(x=Year, y=Tonnes, fill = Fishing_method)) +
+  geom_col() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) +
+  scale_fill_manual(values = c(combined = "#4F94CD", diving = "#43CD80")) +
+  guides(fill = guide_legend("Fishing Method"))
+plot1 + theme(legend.position = "bottom")
 
-#EXAMPLE BELOW:
-library(ggplot2)
-data("iris")
-iris$Sepal.Length[5:10] <- NA  # Create some NAs for this example
-ggplot(data = subset(iris, !is.na(Sepal.Length)), aes(x = Sepal.Length)) +
-  geom_bar(stat = "bin")
+ggsave("Tonnage_per_year.png", width = 5, height = 4, dpi=300, units = "in")
+
+# Effects of the no. of days on Tonnage
+plot2 <- ggplot(data=all2, mapping = aes(x=Days, y=Tonnes, colour=Fishing_method)) +
+  geom_point() +
+  geom_smooth() +
+  theme_classic() +
+  scale_x_continuous(breaks = seq(50, 300, by = 50)) +
+  scale_colour_manual(values = c(combined = "#00C5CD", diving = "#CD3278")) +
+  guides(colour=guide_legend("Fishing Method"))
+plot2 + theme(legend.position = "bottom")
+
+ggsave("Days_on_tonnes.png", width = 5, height = 4, dpi=300, units = "in")
