@@ -1,0 +1,110 @@
+---
+title: ""
+author: ""
+date: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load relevant libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+```
+
+## Import QFish data
+```{r}
+fish <- read.csv("C:/GitHub_EPorter/MB5370_Mod4_EPorter/data/charterfishery_catcheffort.csv")|>
+  rename(Year = X) #Importing CSV file and renaming 'x' column to 'Year'.
+str(fish) #Check data. Indeed, it is messy and needs wrangling.
+```
+
+NB: Upon viewing the data, it appears that the 'net', 'pot' and 'other' fishing methods are lacking a lot if not any data, thus they will be taken out of the analysis. Also, because the 'line' fishing method revealed grossly large numbers, for the sake of this analysis, it will also be taken out. Thus, 'combined' and 'diving' will be used for analysis.
+
+## Begin wrangling data
+To wrangle the data, we will wrangle by 'fishing method', thus begin with the 'combined' method.
+
+### 'Combined' dataframe
+```{r}
+combined <- #Call dataframe 'combined'
+  fish |>
+    select(Year, starts_with("Comb")) |> #Selecting columns that begin with 'Comb'.
+    add_column("Fishing_method" = "combined") |> #Add column and fill cells with 'combined' to determine fishing method.
+  rename(Licences = Combination,
+         Days = Combination.1,
+         Tonnes = Combination.2,
+         DiscardNumber = Combination.3) |> #Rename columns.
+    slice(-1) #Remove first row.
+
+combined #Check. Looks good.
+```
+
+### 'Diving' dataframe
+```{r}
+diving <- #Call dataframe 'combined'
+  fish |>
+    select(Year, starts_with("Div")) |> #Selecting columns that begin with 'Div'.
+    add_column("Fishing_method" = "diving") |> #Add column and fill cells with 'diving' to determine fishing method.
+  rename(Licences = Diving,
+         Days = Diving.1,
+         Tonnes = Diving.2,
+         DiscardNumber = Diving.3) |> #Rename columns.
+    slice(-1) #Remove first row.
+
+diving #Check. Looks good.
+```
+
+## Bind datasets together
+```{r}
+all <- bind_rows(combined, diving) |>
+  as.tibble() #Stacking 'combined' and 'diving' dataframes.
+```
+
+## Remove blank cells and NAs
+```{r}
+#Replace N/As as blank cells:
+all <- data.frame(lapply(all, function(x) {
+  str_replace_all(x, "N/A", "")
+})) 
+
+#Change Licences, Days, Tonnes and Discard No to numeric data types:
+all <- 
+  all |> 
+  mutate(across(!c(Year, Fishing_method), as.numeric))
+
+#Remove all NAs:
+all <-  na.omit(all)
+```
+
+## Create plots
+
+### Tonnage of fish per year:
+```{r}
+plot1 <- ggplot(data=all, mapping = aes(x=Year, y=Tonnes, fill = Fishing_method)) + 
+  geom_col() + #Graph into columns split by fishing method.
+  theme_classic() + #Apply classic theme.
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) + #Rotate 'Year' axis labels 90 degrees to fit better.
+  scale_fill_manual(values = c(combined = "#4F94CD", diving = "#43CD80")) + #Manually change colours of columns per fishing method.
+  guides(fill = guide_legend("Fishing Method")) #Change legend title.
+plot1 + theme(legend.position = "bottom") #Move legend to bottom to increase figure size and looks neater.
+
+ggsave("Tonnage_per_year.png", width = 5, height = 4, dpi=300, units = "in") #Save figure to repository.
+```
+
+## Effects of the number of days on tonnage of fish:
+```{r message=FALSE, warning=FALSE}
+plot2 <- ggplot(data=all, mapping = aes(x=Days, y=Tonnes, colour=Fishing_method)) +
+  geom_point() + #Show each datapoint.
+  geom_smooth() + #Chosen smooth because more attractive to showcase data.
+  theme_classic() + #Apply classic theme.
+  scale_x_continuous(breaks = seq(50, 300, by = 50)) + #Adjust 'x' axis ticks to break every 50 units between 50 and 300.
+  scale_colour_manual(values = c(combined = "#00C5CD", diving = "#CD3278")) + #Manually change colours of points/lines per fishing method.
+  guides(colour=guide_legend("Fishing Method")) #Change legend title.
+plot2 + theme(legend.position = "bottom") #Move legend to bottom to increase figure size and looks neater.
+
+ggsave("Days_on_tonnes.png", width = 5, height = 4, dpi=300, units = "in") #Save figure to repository.
+```
+
